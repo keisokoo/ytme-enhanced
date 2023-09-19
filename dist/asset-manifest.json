@@ -1,0 +1,15 @@
+{
+  "background.js": "/background.js",
+  "content.css": "/content.css",
+  "content.js": "/content.js",
+  "popup.js": "/popup.js",
+  "options.css": "/options.css",
+  "options.js": "/options.js",
+  "icon.png": "/icon.png",
+  "manifest.json": "/manifest.json",
+  "options.html": "/options.html",
+  "popup.html": "/popup.html",
+  "background.js.map": "/background.js.map",
+  "content.css.map": "/content.css.map",
+  "options.css.map": "/options.css.map"
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"content.css","mappings":"AAAA","sources":["webpack://ytme2023/./src/content/index.scss"],"sourcesContent":["div#full-bleed-container {\n  max-height: 100vh;\n  height: 100vh;\n}\n"],"names":[],"sourceRoot":""}
