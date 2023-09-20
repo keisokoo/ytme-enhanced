@@ -34,7 +34,7 @@ module.exports = (env, argv) => {
     devtool: 'cheap-module-source-map',
     entry: {
       background: './src/background/index.ts',
-      content: './src/content/index.tsx',
+      content: './src/content/index.ts',
       popup: './src/pages/popup/index.tsx',
       options: './src/pages/options/index.tsx',
     },

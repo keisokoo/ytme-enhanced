@@ -9,7 +9,6 @@
   "manifest.json": "/manifest.json",
   "options.html": "/options.html",
   "popup.html": "/popup.html",
-  "background.js.map": "/background.js.map",
   "content.css.map": "/content.css.map",
   "options.css.map": "/options.css.map"
 }
