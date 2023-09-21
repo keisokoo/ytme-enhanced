@@ -24,7 +24,7 @@ export const behaviorSubjects = {
   }),
   optionsActive: new BehaviorSubject<boolean>(false),
   theaterMode: new BehaviorSubject<boolean>(false),
-  translateMode: new BehaviorSubject<boolean>(false),
+  transformMode: new BehaviorSubject<boolean>(false),
   aToB: new BehaviorSubject<{ a: number | null, b: number | null, repeat: boolean }>({
     a: null,
     b: null,

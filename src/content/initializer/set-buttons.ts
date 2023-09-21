@@ -1,7 +1,11 @@
+import { cogSVGString } from "../../icons/cog"
+import { horizontalSvgString } from "../../icons/horizontal"
 import { RocketIconsString } from "../../icons/rocket"
-import { fitToWindowSize } from "../actions/fit-mode"
+import { verticalSvgString } from "../../icons/vertical"
 import { setRepeatASection, setRepeatBSection, toggleRepeat } from "../actions/repeat"
-import { restoreTransform, toggleRotate, toggleTranslateMode } from "../actions/update-value"
+import { restoreTransform, toggleRotate, toggleTransformMode } from "../actions/update-value"
+import { fitByWindowHorizontal, fitByWindowVertical } from "../events/funtions"
+import { handleOpenOptionsPage } from "../events/openOptions"
 import { behaviorSubjects } from "../variables"
 
 const { optionsActive } = behaviorSubjects
@@ -20,6 +24,10 @@ export default function setButton(ytmeRoot: HTMLElement, rightControls: HTMLElem
   ytmeRoot.insertAdjacentHTML(
     'afterbegin',
     `
+    <div ytme-move-header>
+      <div ytme-title>YTME</div>
+      <button ytme-open-options>${cogSVGString}</button>
+    </div>
     <div ytme-buttons>
       <div ytme-btn-group>
         <button id="ytme-a-button" ytme-a title="Set Loop Start">A</button>
@@ -28,10 +36,11 @@ export default function setButton(ytmeRoot: HTMLElement, rightControls: HTMLElem
       </div>
       <div ytme-btn-group>
         <button id="ytme-restore-button" ytme-restore disabled="true" title="Restore Transform">Restore</button>
-        <button id="ytme-translate-button" ytme-translate title="Turn On/Off Transform">Transform Off</button>
+        <button id="ytme-transform-button" ytme-transform title="Turn On/Off Transform">Transform Off</button>
       </div>
       <div ytme-btn-group>
-        <button id="ytme-fit-button" ytme-fit title="Fit To Window">Fit</button>
+        <button id="ytme-fit-h-button" ytme-fit-v title="Fit To Window Vertical">${verticalSvgString}Fit</button>
+        <button id="ytme-fit-v-button" ytme-fit-h title="Fit To Window Horizontal">${horizontalSvgString}Fit</button>
         <button id="ytme-rotate-button" ytme-rotate title="Rotate">Rotate</button>
       </div>
     </div>
@@ -41,10 +50,15 @@ export default function setButton(ytmeRoot: HTMLElement, rightControls: HTMLElem
   const bButton = document.getElementById('ytme-b-button')
   const repeatButton = document.getElementById('ytme-repeat-button')
   const restoreButton = document.getElementById('ytme-restore-button')
-  const translateButton = document.getElementById('ytme-translate-button')
+  const transformButton = document.getElementById('ytme-transform-button')
   const rotateButton = document.getElementById('ytme-rotate-button')
-  const fitButton = document.getElementById('ytme-fit-button')
+  const fitHButton = document.getElementById('ytme-fit-h-button')
+  const fitVButton = document.getElementById('ytme-fit-v-button')
+  const openOptions = document.querySelector('[ytme-open-options]')
 
+  if (openOptions) {
+    openOptions.addEventListener('click', handleOpenOptionsPage)
+  }
   if (aButton) {
     aButton.addEventListener('click', setRepeatASection)
   }
@@ -60,10 +74,13 @@ export default function setButton(ytmeRoot: HTMLElement, rightControls: HTMLElem
   if (rotateButton) {
     rotateButton.addEventListener('click', toggleRotate)
   }
-  if (translateButton) {
-    translateButton.addEventListener('click', toggleTranslateMode)
+  if (transformButton) {
+    transformButton.addEventListener('click', toggleTransformMode)
   }
-  if (fitButton) {
-    fitButton.addEventListener('click', fitToWindowSize)
+  if (fitHButton) {
+    fitHButton.addEventListener('click', fitByWindowHorizontal)
+  }
+  if (fitVButton) {
+    fitVButton.addEventListener('click', fitByWindowVertical)
   }
 }

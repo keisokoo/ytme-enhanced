@@ -1,4 +1,4 @@
-import { distinctUntilChanged } from 'rxjs'
+import { Subscription, distinctUntilChanged } from 'rxjs'
 import { syncSettings } from '../settings'
 import {
   createTip,
@@ -20,6 +20,8 @@ import { WaitUntilAppend, mutationByAttrWith } from './mutations'
 import { toHHMMSS } from './utils'
 import { behaviorSubjects, currentUrl } from './variables'
 
+if (chrome.runtime.lastError) console.log(chrome.runtime.lastError.message);
+
 const originalPushState = history.pushState
 const originalReplaceState = history.replaceState
 
@@ -28,7 +30,7 @@ const {
   searchBoxFocused,
   transformValue,
   optionsActive,
-  translateMode,
+  transformMode,
   aToB,
   activeCheck,
 } = behaviorSubjects
@@ -43,13 +45,27 @@ let timeout: number | null = null
 
 let activeObserver: MutationObserver | null = null
 
+
+let optionsActiveAction: Subscription | null = null
+let transformValueAction: Subscription | null = null
+let aToBAction: Subscription | null = null
+let transformModeAction: Subscription | null = null
+
+let activeCheckDetector: Subscription | null = null
+let ytmeActiveDetector: Subscription | null = null
+let searchBoxFocusedDetector: Subscription | null = null
+
 const main = async () => {
   detectYoutube()
 }
 main()
 
 function detectYoutube() {
-  activeCheck.pipe(distinctUntilChanged()).subscribe((value) => {
+  if (activeCheckDetector) activeCheckDetector.unsubscribe()
+  if (ytmeActiveDetector) ytmeActiveDetector.unsubscribe()
+  if (searchBoxFocusedDetector) searchBoxFocusedDetector.unsubscribe()
+
+  activeCheckDetector = activeCheck.pipe(distinctUntilChanged()).subscribe((value) => {
     if (value) {
       waitUntilCheckElements(value)
     } else if (value === '') {
@@ -57,7 +73,7 @@ function detectYoutube() {
       removeConfigs()
     }
   })
-  ytmeActive.pipe(distinctUntilChanged()).subscribe((value) => {
+  ytmeActiveDetector = ytmeActive.pipe(distinctUntilChanged()).subscribe((value) => {
     if (activeObserver) activeObserver.disconnect()
     if (value.youtubeId !== null && activeObserver === null && !value.isTheater) {
       activeObserver = mutationByAttrWith('ytd-watch-flexy', checkTheaterMode)
@@ -70,7 +86,7 @@ function detectYoutube() {
     restoreRepeat()
   })
 
-  searchBoxFocused.pipe(distinctUntilChanged()).subscribe((value) => {
+  searchBoxFocusedDetector = searchBoxFocused.pipe(distinctUntilChanged()).subscribe((value) => {
     if (value) {
       document
         .querySelector('#masthead-container')
@@ -149,7 +165,7 @@ function detectYoutube() {
     originalReplaceState.apply(this, args)
     ytmeActive.next({ ...ytmeActive.getValue(), youtubeId: currentUrl() })
   }
-  window.addEventListener('popstate', function (event) {
+  window.addEventListener('popstate', function () {
     ytmeActive.next({ ...ytmeActive.getValue(), youtubeId: currentUrl() })
   })
 }
@@ -157,8 +173,8 @@ function detectYoutube() {
 function waitUntilCheckElements(youtubeId: string) {
   document.body.setAttribute('ytme-enabled', youtubeId)
   videoElement = document.querySelector('video')
-  rightControlsElement = document.querySelector('.ytp-right-controls')
   youtubeControlBottomElement = document.querySelector('.ytp-chrome-bottom') as HTMLElement
+  rightControlsElement = document.querySelector('.ytp-right-controls')
   videoWrapElement = document.querySelector(
     '.html5-video-container'
   ) as HTMLElement
@@ -175,7 +191,7 @@ function waitUntilCheckElements(youtubeId: string) {
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(() => {
       waitUntilCheckElements(youtubeId)
-    }, 150)
+    }, 300)
   }
 }
 async function runYtme(results: {
@@ -185,6 +201,11 @@ async function runYtme(results: {
   youtubeControlBottom: HTMLElement
   videoContainer: HTMLElement
 }) {
+  if (optionsActiveAction) optionsActiveAction.unsubscribe()
+  if (transformValueAction) transformValueAction.unsubscribe()
+  if (aToBAction) aToBAction.unsubscribe()
+  if (transformModeAction) transformModeAction.unsubscribe()
+
   const settings = await syncSettings()
   const {
     video,
@@ -225,13 +246,12 @@ async function runYtme(results: {
   getVideoInfo(video)
   video.addEventListener('loadedmetadata', videoEventGetVideoType)
 
-
   if (settings.useShortcut && !settings.useShortcutOnlyPopupEnabled) {
     const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
     pageWrap?.addEventListener('keydown', shortcutBind)
   }
-  // 버튼 클릭 이벤트
-  optionsActive.subscribe((value) => {
+  // 기능 버튼 클릭 이벤트
+  optionsActiveAction = optionsActive.subscribe((value) => {
     const ytmeOption = document.querySelector('[ytme-options]')
     const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
     if (value) {
@@ -241,18 +261,19 @@ async function runYtme(results: {
     } else {
       ytmeRoot.removeAttribute('data-ytme-state')
       ytmeOption?.removeAttribute('data-ytme-state')
-      translateMode.next(false)
+      if (!settings.useShortcutOnlyPopupEnabled) transformMode.next(false)
       if (settings.useShortcut && settings.useShortcutOnlyPopupEnabled) pageWrap?.removeEventListener('keydown', shortcutBind)
     }
   })
 
   // 드래그 이벤트
-  transformValue.subscribe((value) => {
+  transformValueAction = transformValue.subscribe((value) => {
     setTransform(value)
   })
 
   // a - b loop 이벤트
-  aToB.pipe(distinctUntilChanged()).subscribe((value) => {
+
+  aToBAction = aToB.pipe(distinctUntilChanged()).subscribe((value) => {
     const video = document.querySelector('video')
     const aButton = document.getElementById('ytme-a-button')
     const bButton = document.getElementById('ytme-b-button')
@@ -299,22 +320,26 @@ async function runYtme(results: {
   })
 
   // transform mode on / off 이벤트
-  translateMode.pipe(distinctUntilChanged()).subscribe((value) => {
-    const translateModeButton = document.querySelector(
-      '[ytme-translate]'
+  transformModeAction = transformMode.pipe(distinctUntilChanged()).subscribe((value) => {
+    const transformModeButton = document.querySelector(
+      '[ytme-transform]'
     ) as HTMLElement
+    if (dragAndZoomEvent && videoContainer) {
+      videoContainer.removeEventListener('mousedown', dragAndZoomEvent.on)
+      videoContainer.removeEventListener('wheel', dragAndZoomEvent.onWheel)
+    }
     if (dragAndZoomEvent) {
       if (value) {
-        if (translateModeButton) {
-          translateModeButton.setAttribute('data-ytme-state', 'active')
-          translateModeButton.textContent = 'Translate On'
+        if (transformModeButton) {
+          transformModeButton.setAttribute('data-ytme-state', 'active')
+          transformModeButton.textContent = 'Transform On'
         }
         videoContainer?.addEventListener('mousedown', dragAndZoomEvent.on, true)
         videoContainer?.addEventListener('wheel', dragAndZoomEvent.onWheel, true)
       } else {
-        if (translateModeButton) {
-          translateModeButton.removeAttribute('data-ytme-state')
-          translateModeButton.textContent = 'Translate Off'
+        if (transformModeButton) {
+          transformModeButton.removeAttribute('data-ytme-state')
+          transformModeButton.textContent = 'Transform Off'
         }
         videoContainer?.removeEventListener(
           'mousedown',

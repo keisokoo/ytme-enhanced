@@ -1,1 +1,0 @@
-{"version":3,"file":"options.css","mappings":"AAAA","sources":["webpack://ytme2023/./src/pages/options/index.scss"],"sourcesContent":["html,\nbody,\n#root {\n  width: 100%;\n  margin: 0;\n  padding: 0;\n}\n"],"names":[],"sourceRoot":""}

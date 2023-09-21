@@ -118,7 +118,7 @@ const App = ({ ...props }: AppProps) => {
               <Question
                 onMouseEnter={() => {
                   set_tooltip(
-                    `Enabling this will allow you to use feature shortcuts.\n\na Loop start: [\nb Loop end: ]\nLoop on/off: \\ (Backslash) \nRotate: r\nFit to screen: e\nTransform mode: z\nRestore: x\n`
+                    `Enabling this will allow you to use feature shortcuts.\n\na Loop start: [\nb Loop end: ]\nLoop on/off: \\ (Backslash) \nRotate: r\nFit to screen vertical: v\nFit to screen horizontal: b\nTransform mode: z\nRestore: x\n`
                   )
                 }}
               />

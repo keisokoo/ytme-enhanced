@@ -10,60 +10,87 @@ div[ytme-dom] > div[ytme-root] {
   background: #ffffff1a;
   padding: 8px;
   border-radius: 8px;
+  &:hover {
+    background: #ffffff4a;
+  }
   &[data-ytme-state='active'] {
     display: flex;
   }
   [ytme-move-header] {
-    padding: 6px 12px;
+    padding: 4px 12px;
     width: 100%;
     border-radius: 4px;
-    background-color: #fff;
+    background-color: transparent;
     user-select: none;
-    font-size: 16px;
-    font-weight: 500;
-    color: #000;
+    font-size: 12px;
+    font-weight: 400;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
+    & > div {
+      display: flex;
+      align-items: center;
+      color: #cccccc;
+      &:hover {
+        color: #fff;
+      }
+    }
+    button {
+      border: 0;
+      user-select: none;
+      cursor: pointer;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      svg {
+        fill: #cccccc;
+      }
+      &:hover {
+        svg {
+          fill: #fff;
+        }
+      }
+    }
   }
   [ytme-buttons] {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    button {
+      flex: 1;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: auto;
+      height: 32px;
+      background: #ffffff84;
+      border: 0;
+      color: #000;
+      font-size: 16px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      &:hover:not(:disabled) {
+        background: #ffffffdc;
+      }
+      &[data-ytme-state='active'] {
+        color: #d91414;
+        background: #ffffff;
+      }
+    }
   }
   [ytme-btn-group] {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
-  }
-  button {
-    flex: 1;
-    white-space: nowrap;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: auto;
-    height: 32px;
-    background: #ffffff84;
-    border: 0;
-    color: #000;
-    font-size: 16px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    svg {
-      width: 100%;
-      height: 100%;
-    }
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    &[data-ytme-state='active'] {
-      color: #d91414;
-      background: #ffffff;
-    }
   }
 }
 [ytme-options] {

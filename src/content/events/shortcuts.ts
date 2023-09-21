@@ -1,6 +1,6 @@
-import { fitToWindowSize } from "../actions/fit-mode"
+import { fitToWindowSizeBy } from "../actions/fit-mode"
 import { setRepeatASection, setRepeatBSection, toggleRepeat } from "../actions/repeat"
-import { restoreTransform, toggleRotate, toggleTranslateMode } from "../actions/update-value"
+import { restoreTransform, toggleRotate, toggleTransformMode } from "../actions/update-value"
 
 const shortcuts = [
   {
@@ -24,14 +24,19 @@ const shortcuts = [
     title: 'Toggle Rotate',
   },
   {
-    key: 'KeyE',
-    action: fitToWindowSize,
-    title: 'Fit to Window Size',
+    key: 'KeyV',
+    action: () => fitToWindowSizeBy('vertical'),
+    title: 'Fit to Window Vertical Size',
+  },
+  {
+    key: 'KeyB',
+    action: () => fitToWindowSizeBy('horizontal'),
+    title: 'Fit to Window Horizontal Size',
   },
   {
     key: 'KeyZ',
-    action: toggleTranslateMode,
-    title: 'Toggle Translate Mode',
+    action: toggleTransformMode,
+    title: 'Toggle Transform Mode',
   },
   {
     key: 'KeyX',

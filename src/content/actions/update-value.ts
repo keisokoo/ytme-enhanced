@@ -1,7 +1,7 @@
 import { behaviorSubjects } from "../variables"
 import { rotateVideoParent, updateTransform } from "./transform"
 
-const { transformValue, translateMode, videoInfo } = behaviorSubjects
+const { transformValue, transformMode, videoInfo } = behaviorSubjects
 
 export function getVideoInfo(video: HTMLVideoElement) {
   const videoWidth = video.videoWidth
@@ -25,8 +25,8 @@ export const toggleRotate = () => {
   rotateVideoParent(currentRotate)
 }
 
-export const toggleTranslateMode = () => {
-  translateMode.next(!translateMode.getValue())
+export const toggleTransformMode = () => {
+  transformMode.next(!transformMode.getValue())
 }
 
 export const restoreTransform = () => {
