@@ -14,7 +14,7 @@ const ToggleWrap = styled.div`
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: #fff;
+    background-color: #effffd;
     top: 2px;
     left: 2px;
     transition: 0.2s;
@@ -25,6 +25,14 @@ const ToggleWrap = styled.div`
       left: calc(100% - 18px);
     }
   }
+  &[data-disabled='true'] {
+    opacity: 0.6;
+    background-color: #555555;
+    cursor: not-allowed;
+    &::after {
+      background-color: #bdbdbd;
+    }
+  }
 `
 
 interface ToggleProps
@@ -33,11 +41,20 @@ interface ToggleProps
     HTMLDivElement
   > {
   active?: boolean
+  disabled?: boolean
 }
-const Toggle = ({ active, ...props }: ToggleProps) => {
+const Toggle = ({ disabled, active, onClick, ...props }: ToggleProps) => {
   return (
     <>
-      <ToggleWrap data-active={active} {...props} />
+      <ToggleWrap
+        data-active={active}
+        data-disabled={disabled}
+        onClick={(e) => {
+          if (disabled) return
+          onClick?.(e)
+        }}
+        {...props}
+      />
     </>
   )
 }

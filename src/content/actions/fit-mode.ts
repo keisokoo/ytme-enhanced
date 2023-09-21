@@ -1,20 +1,9 @@
 import { behaviorSubjects } from "../variables"
-import { rotateVideoParent, updateTransform } from "./transform"
+import { updateTransform } from "./transform"
 
 
-const { transformValue, videoType, videoAspectRatio, } = behaviorSubjects
+const { transformValue, videoInfo } = behaviorSubjects
 
-let timeout: number | null = null
-export function videoResizeEvent() {
-  if (transformValue.getValue().rotate === 0) return
-  const video = document.querySelector('video')
-  if (video) {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      rotateVideoParent(transformValue.getValue().rotate)
-    }, 150)
-  }
-}
 
 export function fitToWindowSize() {
   const degree = transformValue.getValue().rotate
@@ -33,11 +22,11 @@ export function fitToWindowSize() {
       })
       return
     }
-    const currentVideoType = videoType.getValue() ?? 'horizontal'
+    const currentVideoType = videoInfo.getValue().type ?? 'horizontal'
     let scale = 1
     if (video) {
       if (currentVideoType) {
-        const currentRatio = videoAspectRatio.getValue() ?? 0
+        const currentRatio = videoInfo.getValue().aspect ?? 0
         const windowRatio = window.innerWidth / window.innerHeight
         const videoSizeWithWindowFilled =
           windowRatio > currentRatio

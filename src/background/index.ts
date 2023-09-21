@@ -1,4 +1,4 @@
-import { SettingsType, defaultSettings } from "../settings";
+import { ForSyncSettingsType, defaultSettings } from "../settings";
 
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) chrome.tabs.reload(tab.id)
@@ -12,14 +12,12 @@ chrome.runtime.onInstalled.addListener((details) => {
     })
   } else if (details.reason === 'update') {
     chrome.storage.local.get(null, (results) => {
-      const updatedSettings: SettingsType = { ...defaultSettings };
+      const updatedSettings: ForSyncSettingsType = { ...defaultSettings };
       for (const [key] of Object.entries(updatedSettings)) {
         if (Object.prototype.hasOwnProperty.call(results, key)) {
           updatedSettings[key] = results[key];
         }
       }
-      console.log('updatedSettings', updatedSettings);
-
       chrome.storage.local.set({ ...updatedSettings })
     }
     )

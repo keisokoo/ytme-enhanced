@@ -1,21 +1,17 @@
 import { behaviorSubjects } from "../variables"
 import { rotateVideoParent, updateTransform } from "./transform"
 
-const { transformValue, videoAspectRatio, translateMode, videoDuration, videoSize } = behaviorSubjects
+const { transformValue, translateMode, videoInfo } = behaviorSubjects
 
 export function getVideoInfo(video: HTMLVideoElement) {
   const videoWidth = video.videoWidth
   const videoHeight = video.videoHeight
   const aspectRatio = videoWidth / videoHeight
   if (isNaN(aspectRatio)) {
-    videoAspectRatio.next(null)
-    videoDuration.next(null)
-    videoSize.next({ width: 0, height: 0 })
+    videoInfo.next({ duration: 0, width: 0, height: 0, aspect: 0, type: null })
     return
   }
-  videoAspectRatio.next(aspectRatio)
-  videoDuration.next(video.duration)
-  videoSize.next({ width: videoWidth, height: videoHeight })
+  videoInfo.next({ duration: video.duration, width: videoWidth, height: videoHeight, aspect: aspectRatio, type: aspectRatio > 1 ? 'horizontal' : 'vertical' })
 }
 export const toggleRotate = () => {
   let currentRotate = transformValue.getValue().rotate

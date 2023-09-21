@@ -75,25 +75,3 @@ export function restoreRepeat() {
 }
 
 
-
-export function onTimeUpdate(e: Event) {
-  const videoElement = e.currentTarget as HTMLVideoElement
-  const { a, b, repeat } = aToB.getValue()
-  if (!repeat) return
-  const duration = videoElement.duration
-  const nextA = a === null ? 0 : a < 0 ? 0 : a > duration ? 0 : a
-  const nextB = b === null ? duration : b < 0 ? duration : b > duration ? duration : b < nextA ? duration : b
-  if (videoElement.currentTime < nextA) {
-    videoElement.pause()
-    videoElement.currentTime = nextA
-    videoElement.play()
-  } else if (videoElement.currentTime > nextB) {
-    videoElement.pause()
-    videoElement.currentTime = nextA
-    videoElement.play()
-  } else if (nextB === duration && videoElement.currentTime === duration) {
-    videoElement.pause()
-    videoElement.currentTime = nextA
-    videoElement.play()
-  }
-}

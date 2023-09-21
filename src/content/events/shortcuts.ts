@@ -1,6 +1,6 @@
-import { fitToWindowSize } from "./fit-mode"
-import { setRepeatASection, setRepeatBSection, toggleRepeat } from "./repeat"
-import { restoreTransform, toggleRotate, toggleTranslateMode } from "./update-value"
+import { fitToWindowSize } from "../actions/fit-mode"
+import { setRepeatASection, setRepeatBSection, toggleRepeat } from "../actions/repeat"
+import { restoreTransform, toggleRotate, toggleTranslateMode } from "../actions/update-value"
 
 const shortcuts = [
   {

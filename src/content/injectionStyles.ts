@@ -1,10 +1,5 @@
 import { css } from "@emotion/react"
-export const defaultSelector = {
-  theater_mode_container: '#full-bleed-container',
-  page_manager: '#page-manager',
-  masthead_container: '#masthead-container',
-  video_parent_container: '.html5-video-container'
-}
+import { defaultSelector } from "../settings"
 export const getStyles = (selector = {
   ...defaultSelector
 }) => {
@@ -28,7 +23,7 @@ export const getStyles = (selector = {
     body[ytme-enabled] ${selector.masthead_container}[has-focus] > *:first-of-type {
       opacity: 1;
   }
-  ${selector.video_parent_container} {
+  body[ytme-enabled] ${selector.video_parent_container} {
     transform-origin: center;
     width: 100vw;
     height: 100vh;

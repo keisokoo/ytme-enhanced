@@ -6,27 +6,28 @@ export const attrConfig = {
 }
 export function mutationByAttrWith(
   target: string | Element,
-  cb: (mutation: MutationRecord) => void
+  cb: (mutation: MutationRecord) => void,
+  configs?: MutationObserverInit
 ) {
   const currentTarget =
     typeof target === 'string' ? document.querySelector(target) : target
   if (currentTarget === null) {
-    return
+    return null
   }
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes') {
-        cb(mutation)
-      }
+      cb(mutation)
     })
   })
-  observer.observe(currentTarget, attrConfig)
+  observer.observe(currentTarget, configs ?? attrConfig)
+  return observer
 }
 export function WaitUntilAppend(
   target: string,
   childTarget: string,
   cb: (mutation: MutationRecord) => void,
-  configs?: MutationObserverInit
+  configs?: MutationObserverInit,
+  nextConfigs?: MutationObserverInit
 ) {
   if (!document.querySelector(target)) return null
   const observer = new MutationObserver((mutations, observe) => {
@@ -42,7 +43,7 @@ export function WaitUntilAppend(
         })
         if (find && find instanceof HTMLElement) {
           cb(mutation)
-          mutationByAttrWith(find, cb)
+          mutationByAttrWith(find, cb, nextConfigs)
           observe.disconnect()
         }
       } else if (
