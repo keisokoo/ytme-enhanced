@@ -27,7 +27,7 @@ export type SettingsType = {
 export const defaultSettings: SettingsType = {
   defaultSelector: defaultSelector,
   useShortcut: false,
-  useFunction: false,
+  useFunction: true,
   useShortcutOnlyPopupEnabled: true
 }
 export const settings = new BehaviorSubject<SettingsType>(defaultSettings)

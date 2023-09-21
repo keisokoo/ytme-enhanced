@@ -35,7 +35,7 @@ module.exports = (env, argv) => {
     entry: {
       background: './src/background/index.ts',
       content: './src/content/index.ts',
-      popup: './src/pages/popup/index.tsx',
+      // popup: './src/pages/popup/index.tsx',
       options: './src/pages/options/index.tsx',
     },
     output: {
@@ -95,12 +95,12 @@ module.exports = (env, argv) => {
       },
     },
     plugins: [
-      new HtmlWebpackPlugin({
-        filename: 'popup.html',
-        template: 'src/pages/popup/popup.html',
-        chunks: ['popup'],
-        scriptLoading: 'defer',
-      }),
+      // new HtmlWebpackPlugin({
+      //   filename: 'popup.html',
+      //   template: 'src/pages/popup/popup.html',
+      //   chunks: ['popup'],
+      //   scriptLoading: 'defer',
+      // }),
       new HtmlWebpackPlugin({
         filename: 'options.html',
         template: 'src/pages/options/options.html',
@@ -114,13 +114,6 @@ module.exports = (env, argv) => {
         filename: '[name].css',
         chunkFilename: '[id].css',
       }),
-      // {
-      //   apply: (compiler) => {
-      //     compiler.hooks.afterEmit.tap('AfterEmitPlugin', (compilation) => {
-      //       syncManifest(isDevelopment)
-      //     })
-      //   },
-      // },
       new ForkTsCheckerWebpackPlugin(),
       new WebpackManifestPlugin({
         fileName: 'asset-manifest.json',
