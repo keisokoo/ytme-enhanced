@@ -1,11 +1,9 @@
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin')
+const fs = require('fs')
+const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
-const fs = require('fs')
-const path = require('path')
 const CopyPlugin = require('copy-webpack-plugin')
-const { WebpackManifestPlugin } = require('webpack-manifest-plugin')
 
 function syncManifest(isDevelopment) {
   const manifestPath = path.resolve(__dirname, 'dist/manifest.json')
@@ -115,14 +113,6 @@ module.exports = (env, argv) => {
         chunkFilename: '[id].css',
       }),
       new ForkTsCheckerWebpackPlugin(),
-      new WebpackManifestPlugin({
-        fileName: 'asset-manifest.json',
-        publicPath: '/',
-      }),
-      isDevelopment &&
-        new ReactRefreshWebpackPlugin({
-          options: {},
-        }),
     ].filter(Boolean),
     watchOptions: {
       ignored: /node_modules/,

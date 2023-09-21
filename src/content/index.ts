@@ -10,7 +10,7 @@ import { DragAndZoom } from './actions/translate'
 import {
   getVideoInfo
 } from './actions/update-value'
-import { shortcutBind } from './events/shortcuts'
+import { shortcutBind, toggleFunctions } from './events/shortcuts'
 import { onTimeUpdate, videoEventGetVideoType } from './events/video'
 import './index.scss'
 import { applyDynamicStyles } from './initializer/inject-styles'
@@ -246,8 +246,13 @@ async function runYtme(results: {
   getVideoInfo(video)
   video.addEventListener('loadedmetadata', videoEventGetVideoType)
 
+  const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
+  if (settings.useShortcut) {
+    pageWrap?.removeEventListener('keydown', toggleFunctions)
+    pageWrap?.addEventListener('keydown', toggleFunctions)
+  }
   if (settings.useShortcut && !settings.useShortcutOnlyPopupEnabled) {
-    const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
+    pageWrap?.removeEventListener('keydown', shortcutBind)
     pageWrap?.addEventListener('keydown', shortcutBind)
   }
   // 기능 버튼 클릭 이벤트
