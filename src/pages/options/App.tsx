@@ -10,6 +10,7 @@ const Wrap = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  flex-direction: column;
 `
 const AppWrap = styled.div`
   display: flex;
@@ -54,14 +55,17 @@ const Tooltip = styled.div`
   white-space: pre-line;
   width: 100%;
 `
-const descripttion = `이것을 활성화하면 기능들의 단축키를 사용합니다.\n\n
-a 루프 시작: [\n
-b 루프 끝: ]\n
-루프 on/off: \\
-회전: r\n
-화면 맞춤: e\n
-이동,확대 모드:z\n
-화면 변경 초기화: x\n`
+const Title = styled.div`
+  text-align: center;
+`
+const VideoLink = styled.a`
+  text-decoration: underline;
+  color: #146eff;
+  font-weight: bold;
+  display: block;
+  text-align: center;
+  padding: 16px;
+`
 interface AppProps {}
 const App = ({ ...props }: AppProps) => {
   const [settings, set_settings] = useState<SettingsType>({
@@ -80,6 +84,14 @@ const App = ({ ...props }: AppProps) => {
   return (
     <>
       <Wrap>
+        <Title>YTME</Title>
+        <VideoLink
+          href="https://youtu.be/F8Um51lHUC0"
+          target="_blank"
+          referrerPolicy={'no-referrer'}
+        >
+          Basic Usage : https://youtu.be/F8Um51lHUC0
+        </VideoLink>
         <AppWrap>
           {tooltip && (
             <Tooltip

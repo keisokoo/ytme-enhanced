@@ -1,4 +1,5 @@
 
+
 export const attrConfig = {
   attributes: true,
   subtree: false,
@@ -25,14 +26,16 @@ export function mutationByAttrWith(
 export function WaitUntilAppend(
   target: string,
   childTarget: string,
-  cb: (mutation: MutationRecord, target?: HTMLElement) => void,
+  cb: (mutation: MutationRecord) => void,
   configs?: MutationObserverInit,
   nextConfigs?: MutationObserverInit
 ) {
   if (!document.querySelector(target)) return null
   const observer = new MutationObserver((mutations, observe) => {
-    const findMutation = mutations.find((mutation) => {
-      if (mutation.type === 'childList' && mutation.addedNodes.length === 0) return false
+
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList' && mutation.addedNodes.length === 0)
+        return
       if (mutation.type === 'childList') {
         const find = Array.from(mutation.addedNodes).find((node) => {
           return (
@@ -41,36 +44,20 @@ export function WaitUntilAppend(
           )
         })
         if (find && find instanceof HTMLElement) {
-          return true
+          cb(mutation)
+          mutationByAttrWith(find, cb, nextConfigs)
+          observe.disconnect()
         }
       } else if (
         mutation.target instanceof HTMLElement &&
         mutation.target.tagName.toLocaleLowerCase() === childTarget
       ) {
-        return true
-      } else {
-        return false
-      }
-      return false
-    })
-    if (findMutation) {
-      const find = Array.from(findMutation.addedNodes).find((node) => {
-        return (
-          node instanceof HTMLElement &&
-          node.tagName.toLocaleLowerCase() === childTarget
-        )
-      })
-      if (find && find instanceof HTMLElement) {
-        cb(findMutation)
-        mutationByAttrWith(find, cb, nextConfigs)
+        cb(mutation)
+        mutationByAttrWith(mutation.target, cb)
         observe.disconnect()
-        return
       }
-      cb(findMutation)
-      mutationByAttrWith(findMutation.target as HTMLElement, cb)
-      observe.disconnect()
-      return
-    }
+    })
   })
   observer.observe(document.querySelector(target)!, configs)
 }
+

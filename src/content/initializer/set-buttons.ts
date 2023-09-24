@@ -131,8 +131,6 @@ export default function setButton() {
         if (tooltipInterval && tooltipHold >= tooltipHoldMax) {
           clearInterval(tooltipInterval)
           const rect = button.getBoundingClientRect();
-          console.log(rect);
-
           const tooltip = document.createElement('div');
           tooltip.classList.add('ytme-tooltip');
           tooltip.style.top = `${rect.top}px`;

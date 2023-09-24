@@ -258,11 +258,7 @@ function detectYoutube() {
   // check watch page
   mutationByAttrWith('ytd-app', updateLastUrl)
   // check focus search box
-  WaitUntilAppend('ytd-app', 'ytd-searchbox', updateFocus, {
-    attributes: false,
-    subtree: true,
-    childList: true,
-  })
+  mutationByAttrWith('ytd-searchbox', updateFocus)
   // check focus header popup
   WaitUntilAppend('ytd-popup-container', 'tp-yt-iron-dropdown', updateFocus, {
     attributes: false,
