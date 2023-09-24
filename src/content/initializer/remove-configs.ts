@@ -9,9 +9,6 @@ const { optionsActive, transformMode, transformValue, aToB } = behaviorSubjects
 export function removeConfigs() {
   optionsActive.next(false)
   transformMode.next(false)
-  if (document.querySelector('[ytme-options]')) {
-    document.querySelector('[ytme-options]')!.remove()
-  }
   if (document.querySelector('[ytme-root]')) {
     document.querySelector('[ytme-root]')!.removeAttribute('data-ytme-state')
   }

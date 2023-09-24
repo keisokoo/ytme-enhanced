@@ -59,6 +59,8 @@ export class DragAndZoom {
     if (currentRotate === 0) {
       currentRotate = 90
     } else if (currentRotate === 90) {
+      currentRotate = 180
+    } else if (currentRotate === 180) {
       currentRotate = 270
     } else if (currentRotate === 270) {
       currentRotate = 0
@@ -130,6 +132,7 @@ export class DragAndZoom {
         x: 0,
         y: 0,
       },
+      scaleX: 1,
     })
   };
   private isTouchEvent = (event: any): event is TouchEvent => {

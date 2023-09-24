@@ -1,17 +1,43 @@
+body {
+  div[ytme-dom] {
+    display: none;
+  }
+}
+body[ytme-enabled] {
+  div[ytme-dom] {
+    display: block;
+  }
+  .ytme-tooltip {
+    position: absolute;
+    font-size: 12px;
+    background-color: #ffe5ab;
+    padding: 4px 8px;
+    border-radius: 2px;
+    color: #000;
+    top: 0;
+    transform: translate(0, calc(-100% - 8px));
+    z-index: 10010;
+    white-space: nowrap;
+  }
+}
 div[ytme-dom] > div[ytme-root] {
   display: none;
   position: absolute;
-  bottom: 80px;
-  right: 50px;
+  top: 36px;
+  z-index: 10009;
+  right: 36px;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  background: #ffffff1a;
+  background: #00000062;
   padding: 8px;
   border-radius: 8px;
+  opacity: 0.9;
+  transition: 0.3s;
   &:hover {
-    background: #ffffff4a;
+    background: #000000a1;
+    opacity: 1;
   }
   &[data-ytme-state='active'] {
     display: flex;
@@ -31,12 +57,13 @@ div[ytme-dom] > div[ytme-root] {
     & > div {
       display: flex;
       align-items: center;
-      color: #cccccc;
+      color: #cccccc91;
       &:hover {
         color: #fff;
       }
     }
     button {
+      padding: 0;
       border: 0;
       user-select: none;
       cursor: pointer;
@@ -46,11 +73,23 @@ div[ytme-dom] > div[ytme-root] {
       justify-content: center;
       svg {
         fill: #cccccc;
+        transition: 0.3s;
       }
       &:hover {
         svg {
           fill: #fff;
         }
+      }
+    }
+  }
+  &:focus {
+    outline: none;
+    opacity: 1;
+    background: #000000a1;
+    [ytme-move-header] {
+      background-color: #ffffff38;
+      & > div {
+        color: #fff;
       }
     }
   }
@@ -64,22 +103,24 @@ div[ytme-dom] > div[ytme-root] {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 4px;
       width: auto;
-      height: 32px;
-      background: #ffffff84;
+      height: 24px;
+      background: #ffffff46;
       border: 0;
-      color: #000;
-      font-size: 16px;
-      padding: 4px 8px;
-      border-radius: 4px;
+      color: #ffffff;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 2px;
       cursor: pointer;
+      transition: 0.3s;
       &:disabled {
         opacity: 0.5;
         cursor: not-allowed;
       }
       &:hover:not(:disabled) {
         background: #ffffffdc;
+        color: #000;
       }
       &[data-ytme-state='active'] {
         color: #d91414;
@@ -87,32 +128,25 @@ div[ytme-dom] > div[ytme-root] {
       }
     }
   }
+  [ytme-header-btn-group] {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
   [ytme-btn-group] {
     display: flex;
     justify-content: flex-end;
     gap: 8px;
   }
 }
-[ytme-options] {
-  width: 48px;
-  background: transparent;
-  border: 0;
-  color: #fff;
-  font-size: 100%;
-  height: 100%;
-  padding: 0 14px;
-  cursor: pointer;
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-  &[data-ytme-state='active'] {
-    color: #d91414;
+body {
+  .ytme-loop {
+    display: none;
   }
 }
-
 body[ytme-enabled] {
   .ytme-loop {
+    display: block;
     position: absolute;
     z-index: 200;
     height: 100%;

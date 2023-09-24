@@ -92,6 +92,28 @@ const App = ({ ...props }: AppProps) => {
           )}
           <ItemRow>
             <label>
+              {'sticky video(experimental)'}
+              <Question
+                onMouseEnter={() => {
+                  set_tooltip(
+                    `This feature pins the video. As you scroll, you can view comments along with the screen."`
+                  )
+                }}
+              />
+            </label>
+            <Toggle
+              active={settings.stickyVideo}
+              onClick={() => {
+                const newSettings = produce(settings, (draft) => {
+                  draft.stickyVideo = !settings.stickyVideo
+                })
+                set_settings(newSettings)
+                chrome.storage.local.set(newSettings)
+              }}
+            />
+          </ItemRow>
+          <ItemRow>
+            <label>
               {'use function'}
               <Question
                 onMouseEnter={() => {
@@ -118,7 +140,7 @@ const App = ({ ...props }: AppProps) => {
               <Question
                 onMouseEnter={() => {
                   set_tooltip(
-                    `Enabling this will allow you to use feature shortcuts.\n\nOpen Functions Popup: \`(Backquote)\n\na Loop start: [\nb Loop end: ]\nLoop on/off: \\ (Backslash) \nRotate: r\nFit to screen vertical: v\nFit to screen horizontal: b\nTransform mode: z\nRestore: x\n`
+                    `Enabling this will allow you to use feature shortcuts.\n\na Loop start: [\nb Loop end: ]\nLoop on/off: \\ (Backslash) \nRotate: r\nFit to screen vertical: v\nFit to screen horizontal: b\nTransform mode: z\nRestore: x\n`
                   )
                 }}
               />
@@ -148,7 +170,7 @@ const App = ({ ...props }: AppProps) => {
             </label>
             <Toggle
               active={settings.useShortcutOnlyPopupEnabled}
-              disabled={!settings.useShortcut}
+              disabled={!settings.useShortcut || !settings.useFunction}
               onClick={() => {
                 const newSettings = produce(settings, (draft) => {
                   draft.useShortcutOnlyPopupEnabled =

@@ -1,5 +1,5 @@
 import { behaviorSubjects } from "../variables"
-import { rotateVideoParent, updateTransform } from "./transform"
+import { rotateVideoParent, setScaleX, updateTransform } from "./transform"
 
 const { transformValue, transformMode, videoInfo } = behaviorSubjects
 
@@ -13,11 +13,21 @@ export function getVideoInfo(video: HTMLVideoElement) {
   }
   videoInfo.next({ duration: video.duration, width: videoWidth, height: videoHeight, aspect: aspectRatio, type: aspectRatio > 1 ? 'horizontal' : 'vertical' })
 }
+export const toggleScaleX = () => {
+  const currentScaleX = transformValue.getValue().scaleX
+  if (currentScaleX === 1) {
+    setScaleX(-1)
+  } else {
+    setScaleX(1)
+  }
+}
 export const toggleRotate = () => {
   let currentRotate = transformValue.getValue().rotate
   if (currentRotate === 0) {
     currentRotate = 90
   } else if (currentRotate === 90) {
+    currentRotate = 180
+  } else if (currentRotate === 180) {
     currentRotate = 270
   } else if (currentRotate === 270) {
     currentRotate = 0
@@ -35,5 +45,6 @@ export const restoreTransform = () => {
     translate: { x: 0, y: 0 },
     rotate: 0,
     scale: 1,
+    scaleX: 1,
   })
 }

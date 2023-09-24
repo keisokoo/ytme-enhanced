@@ -1,284 +1,117 @@
-import { Subscription, distinctUntilChanged } from 'rxjs'
+import { distinctUntilChanged } from 'rxjs'
+import { moveIconSvgString } from '../icons/moveIcon'
 import { syncSettings } from '../settings'
 import {
   createTip,
   deleteTip,
   restoreRepeat
 } from './actions/repeat'
+import { handleSearchBoxFocused } from './actions/searchBoxFocused'
 import { setTransform } from './actions/transform'
 import { DragAndZoom } from './actions/translate'
 import {
   getVideoInfo
 } from './actions/update-value'
-import { shortcutBind, toggleFunctions } from './events/shortcuts'
+import { shortcutBind, } from './events/shortcuts'
 import { onTimeUpdate, videoEventGetVideoType } from './events/video'
 import './index.scss'
 import { applyDynamicStyles } from './initializer/inject-styles'
 import { removeConfigs } from './initializer/remove-configs'
 import setButton from './initializer/set-buttons'
 import { WaitUntilAppend, mutationByAttrWith } from './mutations'
-import { toHHMMSS } from './utils'
+import { extractYouTubeId, toHHMMSS } from './utils'
 import { behaviorSubjects, currentUrl } from './variables'
 
-if (chrome.runtime.lastError) console.log(chrome.runtime.lastError.message);
 
+type YTMEActiveType = {
+  youtubeId: string | null;
+  isTheater: boolean;
+}
+
+if (chrome.runtime.lastError) console.log(chrome.runtime.lastError.message);
+let loaded = false
 const originalPushState = history.pushState
 const originalReplaceState = history.replaceState
 
 const {
-  ytmeActive,
-  searchBoxFocused,
   transformValue,
   optionsActive,
   transformMode,
   aToB,
-  activeCheck,
 } = behaviorSubjects
 
 let dragAndZoomEvent: DragAndZoom | null = null
 let videoElement: HTMLVideoElement | null
-let rightControlsElement: HTMLElement | null
-let youtubeControlBottomElement: HTMLElement | null
 let videoWrapElement: HTMLElement | null
 let videoWrapElementParent: HTMLElement | null
 let timeout: number | null = null
 
-let activeObserver: MutationObserver | null = null
-
-
-let optionsActiveAction: Subscription | null = null
-let transformValueAction: Subscription | null = null
-let aToBAction: Subscription | null = null
-let transformModeAction: Subscription | null = null
-
-let activeCheckDetector: Subscription | null = null
-let ytmeActiveDetector: Subscription | null = null
-let searchBoxFocusedDetector: Subscription | null = null
-
-const main = async () => {
-  detectYoutube()
-}
-main()
-
-function detectYoutube() {
-  if (activeCheckDetector) activeCheckDetector.unsubscribe()
-  if (ytmeActiveDetector) ytmeActiveDetector.unsubscribe()
-  if (searchBoxFocusedDetector) searchBoxFocusedDetector.unsubscribe()
-
-  activeCheckDetector = activeCheck.pipe(distinctUntilChanged()).subscribe((value) => {
-    if (value) {
-      waitUntilCheckElements(value)
-    } else if (value === '') {
-      if (timeout) clearTimeout(timeout)
-      removeConfigs()
-    }
-  })
-  ytmeActiveDetector = ytmeActive.pipe(distinctUntilChanged()).subscribe((value) => {
-    if (activeObserver) activeObserver.disconnect()
-    if (value.youtubeId !== null && activeObserver === null && !value.isTheater) {
-      activeObserver = mutationByAttrWith('ytd-watch-flexy', checkTheaterMode)
-    }
-    if (value.isTheater && value.youtubeId) {
-      activeCheck.next(value.youtubeId)
-    } else {
-      activeCheck.next('')
-    }
-    restoreRepeat()
-  })
-
-  searchBoxFocusedDetector = searchBoxFocused.pipe(distinctUntilChanged()).subscribe((value) => {
-    if (value) {
-      document
-        .querySelector('#masthead-container')
-        ?.setAttribute('has-focus', '')
-    } else {
-      document
-        .querySelector('#masthead-container')
-        ?.removeAttribute('has-focus')
-    }
-  })
-
-  function updateLastUrl(mutation: MutationRecord) {
-    if (mutation.type === 'attributes') {
-      ytmeActive.next({ ...ytmeActive.getValue(), youtubeId: currentUrl() })
-    }
-
-  }
-
-  function checkTheaterMode(mutation: MutationRecord) {
-    const mutationTarget = mutation.target as HTMLElement
-    if (
-      !mutationTarget.hasAttribute('hidden') &&
-      (mutationTarget.hasAttribute('theater') ||
-        mutationTarget.hasAttribute('full-bleed-player') ||
-        mutationTarget.hasAttribute('fullscreen'))
-    ) {
-      ytmeActive.next({
-        isTheater: true, youtubeId: currentUrl()
-      })
-    } else {
-      ytmeActive.next({
-        ...ytmeActive.getValue(),
-        isTheater: false,
-      })
-    }
-  }
-
-  function updateFocus(mutation: MutationRecord) {
-    if (
-      mutation.attributeName === 'focused' ||
-      mutation.attributeName === 'has-focus'
-    ) {
-      searchBoxFocused.next(
-        (mutation.target instanceof HTMLElement &&
-          mutation.target.hasAttribute('focused')) ||
-        (mutation.target instanceof HTMLElement &&
-          mutation.target.hasAttribute('has-focus'))
-      )
-    }
-  }
-  // check watch page
-  mutationByAttrWith('ytd-app', updateLastUrl)
-  // check focus search box
-  WaitUntilAppend('ytd-app', 'ytd-searchbox', updateFocus, {
-    attributes: false,
-    subtree: true,
-    childList: true,
-  })
-  // check focus header popup
-  WaitUntilAppend('ytd-popup-container', 'tp-yt-iron-dropdown', updateFocus, {
-    attributes: false,
-    subtree: false,
-    childList: true,
-  })
-  // check theater mode
-  WaitUntilAppend('ytd-app', 'ytd-watch-flexy', checkTheaterMode, {
-    attributes: false,
-    subtree: true,
-    childList: true,
-  })
-  history.pushState = function (...args) {
-    originalPushState.apply(this, args)
-    ytmeActive.next({ ...ytmeActive.getValue(), youtubeId: currentUrl() })
-  }
-  history.replaceState = function (...args) {
-    originalReplaceState.apply(this, args)
-    ytmeActive.next({ ...ytmeActive.getValue(), youtubeId: currentUrl() })
-  }
-  window.addEventListener('popstate', function () {
-    ytmeActive.next({ ...ytmeActive.getValue(), youtubeId: currentUrl() })
-  })
+let ytmeActive: YTMEActiveType = {
+  youtubeId: null,
+  isTheater: false
 }
 
-function waitUntilCheckElements(youtubeId: string) {
-  document.body.setAttribute('ytme-enabled', youtubeId)
-  videoElement = document.querySelector('video')
-  youtubeControlBottomElement = document.querySelector('.ytp-chrome-bottom') as HTMLElement
-  rightControlsElement = document.querySelector('.ytp-right-controls')
-  videoWrapElement = document.querySelector(
-    '.html5-video-container'
-  ) as HTMLElement
-  videoWrapElementParent = videoWrapElement?.parentElement as HTMLElement
-  if (videoElement && rightControlsElement && videoWrapElement && youtubeControlBottomElement && videoWrapElementParent) {
-    runYtme({
-      video: videoElement,
-      rightControls: rightControlsElement,
-      videoParentElement: videoWrapElement,
-      youtubeControlBottom: youtubeControlBottomElement,
-      videoContainer: videoWrapElementParent
-    })
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'check') {
+    const currentUrl = window.location.href
+    const isYouTube = currentUrl.includes('youtube.com')
+    const youtubeId = extractYouTubeId(currentUrl)
+    const modeContainer = document.querySelector('ytd-watch-flexy') as HTMLElement
+    const isTheater = modeContainer && !modeContainer.hasAttribute('hidden') && (modeContainer.hasAttribute('theater') || modeContainer.hasAttribute('full-bleed-player') || modeContainer.hasAttribute('fullscreen'))
+    const ytmeEnabled = document.body.getAttribute('ytme-enabled')
+    const ytmeRoot = document.querySelector('[ytme-root]')
+    const hasYtmeRoot = ytmeRoot !== null
+    if (!loaded) {
+      sendResponse({ isYouTube, youtubeId, isTheater, ytmeEnabled })
+    }
+    if (!isYouTube) {
+      sendResponse({ isYouTube })
+    }
+    if (!youtubeId) {
+      sendResponse({ isYouTube })
+    }
+    if (!isTheater && !ytmeEnabled) {
+      const theaterButton = document.querySelector('[aria-keyshortcuts="t"]') as HTMLElement
+      theaterButton?.click()
+      sendResponse({ isYouTube, youtubeId, isTheater, ytmeEnabled, hasYtmeRoot })
+    }
+    sendResponse({ isYouTube, youtubeId, isTheater, ytmeEnabled, hasYtmeRoot })
+  }
+  if (message.type === 'toggleTheater') {
+    const theaterButton = document.querySelector('[aria-keyshortcuts="t"]') as HTMLElement
+    theaterButton?.click()
+  }
+  if (message.type === 'openOptions') {
+    optionsActive.next(!optionsActive.getValue())
+    sendResponse({ success: true })
+  }
+  return true
+})
+function handleYtmeActive(value: YTMEActiveType) {
+  if (value.isTheater === ytmeActive.isTheater && value.youtubeId === ytmeActive.youtubeId) {
+    return
+  }
+  restoreRepeat()
+  ytmeActive = value
+  if (value.isTheater && value.youtubeId) {
+    waitUntilCheckElements(value.youtubeId)
   } else {
     if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => {
-      waitUntilCheckElements(youtubeId)
-    }, 300)
+    removeConfigs()
   }
 }
-async function runYtme(results: {
-  video: HTMLVideoElement
-  rightControls: HTMLElement
-  videoParentElement: HTMLElement
-  youtubeControlBottom: HTMLElement
-  videoContainer: HTMLElement
-}) {
-  if (optionsActiveAction) optionsActiveAction.unsubscribe()
-  if (transformValueAction) transformValueAction.unsubscribe()
-  if (aToBAction) aToBAction.unsubscribe()
-  if (transformModeAction) transformModeAction.unsubscribe()
 
+
+const main = async () => {
+  loaded = false
   const settings = await syncSettings()
-  const {
-    video,
-    rightControls,
-    videoParentElement,
-    youtubeControlBottom,
-    videoContainer
-  } = results
-
-  applyDynamicStyles(settings.defaultSelector)
-
-  if (!settings.useFunction) return
-
-  // Functions 영역 생성
-  if (document.querySelector('[ytme-dom]')) {
-    document.querySelector('[ytme-dom]')!.remove()
-  }
-  const ytme_dom = document.createElement('div')
-  const ytmeRoot = document.createElement('div')
-  ytme_dom.setAttribute('ytme-dom', '')
-  ytmeRoot.setAttribute('ytme-root', '')
-  youtubeControlBottom.appendChild(ytme_dom)
-  ytme_dom.appendChild(ytmeRoot)
-
-  // 드래그 이벤트 생성
-  if (!dragAndZoomEvent) {
-    dragAndZoomEvent = new DragAndZoom(
-      behaviorSubjects.transformValue,
-      videoParentElement,
-      videoContainer
-    )
-  }
-
+  detectYoutube()
   // 버튼 생성
-  setButton(ytmeRoot, rightControls)
-
-  // 비디오 정보 확인
-  getVideoInfo(video)
-  video.addEventListener('loadedmetadata', videoEventGetVideoType)
-
-  const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
-  if (settings.useShortcut) {
-    pageWrap?.removeEventListener('keydown', toggleFunctions)
-    pageWrap?.addEventListener('keydown', toggleFunctions)
-  }
-  if (settings.useShortcut && !settings.useShortcutOnlyPopupEnabled) {
-    pageWrap?.removeEventListener('keydown', shortcutBind)
-    pageWrap?.addEventListener('keydown', shortcutBind)
-  }
-  // 기능 버튼 클릭 이벤트
-  optionsActiveAction = optionsActive.subscribe((value) => {
-    const ytmeOption = document.querySelector('[ytme-options]')
-    const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
-    if (value) {
-      ytmeRoot.setAttribute('data-ytme-state', 'active')
-      ytmeOption?.setAttribute('data-ytme-state', 'active')
-      if (settings.useShortcut && settings.useShortcutOnlyPopupEnabled) pageWrap?.addEventListener('keydown', shortcutBind)
-    } else {
-      ytmeRoot.removeAttribute('data-ytme-state')
-      ytmeOption?.removeAttribute('data-ytme-state')
-      if (!settings.useShortcutOnlyPopupEnabled) transformMode.next(false)
-      if (settings.useShortcut && settings.useShortcutOnlyPopupEnabled) pageWrap?.removeEventListener('keydown', shortcutBind)
-    }
-  })
-
-  // 드래그 이벤트
-  transformValueAction = transformValue.subscribe((value) => {
-    setTransform(value)
-  })
+  if (!settings.useFunction) return
+  setButton()
 
   // a - b loop 이벤트
-
-  aToBAction = aToB.pipe(distinctUntilChanged()).subscribe((value) => {
+  aToB.pipe(distinctUntilChanged()).subscribe((value) => {
     const video = document.querySelector('video')
     const aButton = document.getElementById('ytme-a-button')
     const bButton = document.getElementById('ytme-b-button')
@@ -323,9 +156,34 @@ async function runYtme(results: {
       video.removeEventListener('timeupdate', onTimeUpdate)
     }
   })
+  // 드래그 이벤트
+  transformValue.subscribe((value) => {
+    setTransform(value)
+  })
+  // 기능 버튼 클릭 이벤트
+  optionsActive.subscribe((value) => {
+    const ytmeRoot = document.querySelector('[ytme-root]') as HTMLElement
+    const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
+    if (value) {
+      ytmeRoot?.setAttribute('data-ytme-state', 'active')
+      if (settings.useShortcut && settings.useShortcutOnlyPopupEnabled) {
+        pageWrap?.addEventListener('keydown', shortcutBind)
+        ytmeRoot?.addEventListener('keydown', shortcutBind)
+        ytmeRoot?.focus()
+      }
+    } else {
+      ytmeRoot?.removeAttribute('data-ytme-state')
+      if (!settings.useShortcutOnlyPopupEnabled) transformMode.next(false)
+      if (settings.useShortcut && settings.useShortcutOnlyPopupEnabled) {
+        pageWrap?.removeEventListener('keydown', shortcutBind)
+        ytmeRoot?.removeEventListener('keydown', shortcutBind)
+      }
+    }
+  })
 
   // transform mode on / off 이벤트
-  transformModeAction = transformMode.pipe(distinctUntilChanged()).subscribe((value) => {
+  transformMode.pipe(distinctUntilChanged()).subscribe((value) => {
+    const videoContainer = document.querySelector(settings.defaultSelector.theater_mode_container) as HTMLElement
     const transformModeButton = document.querySelector(
       '[ytme-transform]'
     ) as HTMLElement
@@ -337,14 +195,14 @@ async function runYtme(results: {
       if (value) {
         if (transformModeButton) {
           transformModeButton.setAttribute('data-ytme-state', 'active')
-          transformModeButton.textContent = 'Transform On'
+          transformModeButton.innerHTML = `${moveIconSvgString}On`
         }
         videoContainer?.addEventListener('mousedown', dragAndZoomEvent.on, true)
         videoContainer?.addEventListener('wheel', dragAndZoomEvent.onWheel, true)
       } else {
         if (transformModeButton) {
           transformModeButton.removeAttribute('data-ytme-state')
-          transformModeButton.textContent = 'Transform Off'
+          transformModeButton.innerHTML = `${moveIconSvgString}Off`
         }
         videoContainer?.removeEventListener(
           'mousedown',
@@ -359,5 +217,136 @@ async function runYtme(results: {
       }
     }
   })
+}
+main()
+function detectYoutube() {
+  function updateLastUrl(mutation: MutationRecord) {
+    if (mutation.type === 'attributes') {
+      handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
+    }
+  }
+  function checkTheaterMode(mutation: MutationRecord) {
+    const mutationTarget = mutation.target as HTMLElement
+    if (
+      !mutationTarget.hasAttribute('hidden') &&
+      (mutationTarget.hasAttribute('theater') ||
+        mutationTarget.hasAttribute('full-bleed-player') ||
+        mutationTarget.hasAttribute('fullscreen'))
+    ) {
+      handleYtmeActive({
+        isTheater: true, youtubeId: currentUrl()
+      })
+    } else {
+      handleYtmeActive({
+        ...ytmeActive,
+        isTheater: false,
+      })
+    }
+  }
+  function updateFocus(mutation: MutationRecord) {
+    if (
+      mutation.attributeName === 'focused' ||
+      mutation.attributeName === 'has-focus'
+    ) {
+      handleSearchBoxFocused(
+        (mutation.target instanceof HTMLElement &&
+          mutation.target.hasAttribute('focused')) ||
+        (mutation.target instanceof HTMLElement &&
+          mutation.target.hasAttribute('has-focus')))
+    }
+  }
+  // check watch page
+  mutationByAttrWith('ytd-app', updateLastUrl)
+  // check focus search box
+  WaitUntilAppend('ytd-app', 'ytd-searchbox', updateFocus, {
+    attributes: false,
+    subtree: true,
+    childList: true,
+  })
+  // check focus header popup
+  WaitUntilAppend('ytd-popup-container', 'tp-yt-iron-dropdown', updateFocus, {
+    attributes: false,
+    subtree: false,
+    childList: true,
+  })
+  // check theater mode
+  WaitUntilAppend('ytd-app', 'ytd-watch-flexy', checkTheaterMode, {
+    attributes: false,
+    subtree: true,
+    childList: true,
+  })
+  history.pushState = function (...args) {
+    originalPushState.apply(this, args)
+    handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
+  }
+  history.replaceState = function (...args) {
+    originalReplaceState.apply(this, args)
+    handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
+  }
+  window.addEventListener('popstate', function () {
+    handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
+  })
+
+  loaded = true
+}
+
+function waitUntilCheckElements(youtubeId: string) {
+  document.body.setAttribute('ytme-enabled', youtubeId)
+  videoElement = document.querySelector('video')
+  videoWrapElement = document.querySelector(
+    '.html5-video-container'
+  ) as HTMLElement
+  videoWrapElementParent = videoWrapElement?.parentElement as HTMLElement
+  if (videoElement && videoWrapElement && videoWrapElementParent) {
+    runYtme({
+      video: videoElement,
+      videoParentElement: videoWrapElement,
+      videoContainer: videoWrapElementParent
+    })
+  } else {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      waitUntilCheckElements(youtubeId)
+    }, 300)
+  }
+}
+async function runYtme(results: {
+  video: HTMLVideoElement
+  videoParentElement: HTMLElement
+  videoContainer: HTMLElement
+}) {
+
+  const settings = await syncSettings()
+  const {
+    video,
+    videoParentElement,
+    videoContainer
+  } = results
+
+  applyDynamicStyles(settings.defaultSelector, {
+    disableFunctions: !settings.useFunction,
+    experimental: settings.stickyVideo,
+  })
+
+
+  // 드래그 이벤트 생성
+  if (!dragAndZoomEvent) {
+    dragAndZoomEvent = new DragAndZoom(
+      behaviorSubjects.transformValue,
+      videoParentElement,
+      videoContainer
+    )
+  }
+
+  // 비디오 정보 확인
+  getVideoInfo(video)
+  video.addEventListener('loadedmetadata', videoEventGetVideoType)
+
+  const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement
+
+  if (settings.useShortcut && !settings.useShortcutOnlyPopupEnabled) {
+    pageWrap?.removeEventListener('keydown', shortcutBind)
+    pageWrap?.addEventListener('keydown', shortcutBind)
+  }
 
 }

@@ -1,6 +1,6 @@
 import { fitToWindowSizeBy } from "../actions/fit-mode";
 import { setRepeatASection, setRepeatBSection, toggleRepeat } from "../actions/repeat";
-import { restoreTransform, toggleRotate, toggleTransformMode } from "../actions/update-value";
+import { restoreTransform, toggleRotate, toggleScaleX, toggleTransformMode } from "../actions/update-value";
 import { behaviorSubjects } from "../variables";
 
 const { optionsActive } = behaviorSubjects
@@ -25,6 +25,11 @@ const shortcuts = [
     key: 'KeyR',
     action: toggleRotate,
     title: 'Toggle Rotate',
+  },
+  {
+    key: 'KeyG',
+    action: toggleScaleX,
+    title: 'Toggle Flip Horizontal',
   },
   {
     key: 'KeyV',
@@ -56,9 +61,4 @@ export function shortcutBind(e: KeyboardEvent) {
       shortcut.action()
     }
   })
-}
-export function toggleFunctions(e: KeyboardEvent) {
-  if (e.code === 'Backquote') {
-    optionsActive.next(!optionsActive.getValue())
-  }
 }
