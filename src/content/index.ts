@@ -1,6 +1,7 @@
 import { distinctUntilChanged } from 'rxjs'
 import { moveIconSvgString } from '../icons/moveIcon'
 import { syncSettings } from '../settings'
+import { getCurrentVideoSizeByWindow } from './actions/fit-mode'
 import {
   createTip,
   deleteTip,
@@ -318,7 +319,6 @@ async function runYtme(results: {
     videoParentElement,
     videoContainer
   } = results
-
   applyDynamicStyles(settings.defaultSelector, {
     disableFunctions: !settings.useFunction,
     experimental: settings.stickyVideo,
@@ -336,6 +336,10 @@ async function runYtme(results: {
 
   // 비디오 정보 확인
   getVideoInfo(video)
+  const { resizedWidth, resizedHeight } = getCurrentVideoSizeByWindow(video)
+
+  video.style.width = resizedWidth + 'px'
+  video.style.height = resizedHeight + 'px'
   video.addEventListener('loadedmetadata', videoEventGetVideoType)
 
   const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement

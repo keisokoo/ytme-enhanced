@@ -79,6 +79,11 @@ export const getStyles = (selector = {
       opacity: 1;
   }
   ${options?.disableFunctions ? `` : `
+  body ${selector.video_parent_container} {
+    transform-origin: center;
+    width: 100%;
+    height: 100%;
+  }
   body[ytme-enabled] ${selector.video_parent_container} {
     transform-origin: center;
     width: 100vw;
