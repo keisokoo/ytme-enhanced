@@ -104,6 +104,28 @@ const App = ({ ...props }: AppProps) => {
           )}
           <ItemRow>
             <label>
+              {'always on theater mode'}
+              <Question
+                onMouseEnter={() => {
+                  set_tooltip(
+                    `This feature always keeps the video in theater mode.`
+                  )
+                }}
+              />
+            </label>
+            <Toggle
+              active={settings.alwaysTheaterMode}
+              onClick={() => {
+                const newSettings = produce(settings, (draft) => {
+                  draft.alwaysTheaterMode = !settings.alwaysTheaterMode
+                })
+                set_settings(newSettings)
+                chrome.storage.local.set(newSettings)
+              }}
+            />
+          </ItemRow>
+          <ItemRow>
+            <label>
               {'sticky video(experimental)'}
               <Question
                 onMouseEnter={() => {

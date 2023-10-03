@@ -14,7 +14,7 @@ import { behaviorSubjects } from "../variables"
 const { optionsActive } = behaviorSubjects
 
 
-let tooltipInterval: number | null = null
+let tooltipInterval: NodeJS.Timeout | null = null
 const tooltipHoldMax = 3
 
 export default function setButton() {

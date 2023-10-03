@@ -27,7 +27,6 @@ function syncManifest(isDevelopment) {
 }
 
 module.exports = (env, argv) => {
-  const isDevelopment = argv.mode === 'development'
   return {
     devtool: 'cheap-module-source-map',
     entry: {
@@ -60,7 +59,7 @@ module.exports = (env, argv) => {
                   ['@babel/preset-react', { runtime: 'automatic' }],
                 ].filter(Boolean),
                 plugins: [
-                  isDevelopment && require.resolve('react-refresh/babel'),
+                  // isDevelopment && require.resolve('react-refresh/babel'),
                 ].filter(Boolean),
               },
             },

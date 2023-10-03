@@ -36,7 +36,7 @@ export class DragAndZoom {
   eventElement: HTMLElement
   isPlaying: boolean = false;
   restrictPosition?: (current: XY, targetEl: DOMRect) => XY
-  bezelTimeout: number | null = null
+  bezelTimeout: NodeJS.Timeout | null = null
   noVideoMove: boolean = false
   constructor(ts: BehaviorSubject<TransformValueType>, targetElement: HTMLElement,
     eventElement?: HTMLElement, configs?: {

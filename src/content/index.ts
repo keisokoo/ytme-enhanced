@@ -1,13 +1,14 @@
 import { distinctUntilChanged } from 'rxjs'
 import { moveIconSvgString } from '../icons/moveIcon'
-import { syncSettings } from '../settings'
-import { getCurrentVideoSizeByWindow } from './actions/fit-mode'
+import { settings, syncSettings } from '../settings'
+import { fixFitVideoSize } from './actions/fit-mode'
 import {
   createTip,
   deleteTip,
   restoreRepeat
 } from './actions/repeat'
 import { handleSearchBoxFocused } from './actions/searchBoxFocused'
+import { setTheaterMode } from './actions/setTheaterMode'
 import { setTransform } from './actions/transform'
 import { DragAndZoom } from './actions/translate'
 import {
@@ -20,9 +21,8 @@ import { applyDynamicStyles } from './initializer/inject-styles'
 import { removeConfigs } from './initializer/remove-configs'
 import setButton from './initializer/set-buttons'
 import { WaitUntilAppend, mutationByAttrWith } from './mutations'
-import { extractYouTubeId, toHHMMSS } from './utils'
+import { debounce, devLog, extractYouTubeId, toHHMMSS } from './utils'
 import { behaviorSubjects, currentUrl } from './variables'
-
 
 type YTMEActiveType = {
   youtubeId: string | null;
@@ -45,7 +45,7 @@ let dragAndZoomEvent: DragAndZoom | null = null
 let videoElement: HTMLVideoElement | null
 let videoWrapElement: HTMLElement | null
 let videoWrapElementParent: HTMLElement | null
-let timeout: number | null = null
+let timeout: NodeJS.Timeout | null = null
 
 let ytmeActive: YTMEActiveType = {
   youtubeId: null,
@@ -72,8 +72,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ isYouTube })
     }
     if (!isTheater && !ytmeEnabled) {
-      const theaterButton = document.querySelector('[aria-keyshortcuts="t"]') as HTMLElement
-      theaterButton?.click()
+      setTheaterMode()
       sendResponse({ isYouTube, youtubeId, isTheater, ytmeEnabled, hasYtmeRoot })
     }
     sendResponse({ isYouTube, youtubeId, isTheater, ytmeEnabled, hasYtmeRoot })
@@ -88,9 +87,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   return true
 })
-function handleYtmeActive(value: YTMEActiveType) {
+function debouncedActive(value: YTMEActiveType) {
   if (value.isTheater === ytmeActive.isTheater && value.youtubeId === ytmeActive.youtubeId) {
     return
+  }
+  if (value.youtubeId !== ytmeActive.youtubeId && value.isTheater === false) {
+    devLog('youtube id change', value);
+    devLog('ytmeActive', ytmeActive);
   }
   restoreRepeat()
   ytmeActive = value
@@ -99,11 +102,15 @@ function handleYtmeActive(value: YTMEActiveType) {
   } else {
     if (timeout) clearTimeout(timeout)
     removeConfigs()
+    if (videoElement) fixFitVideoSize(videoElement as HTMLVideoElement, true)
   }
 }
+const handleYtmeActive = debounce(debouncedActive, 10)
 
-
+const isDev = process.env.NODE_ENV === 'development'
 const main = async () => {
+  devLog('ytme main loaded', isDev ? 'dev mode' : 'prod mode');
+
   loaded = false
   const settings = await syncSettings()
   detectYoutube()
@@ -220,30 +227,40 @@ const main = async () => {
   })
 }
 main()
+function checkTheaterMode(mutation: MutationRecord) {
+  const mutationTarget = mutation.target as HTMLElement
+  if (
+    !mutationTarget.hasAttribute('hidden') &&
+    (mutationTarget.hasAttribute('theater') ||
+      mutationTarget.hasAttribute('full-bleed-player') ||
+      mutationTarget.hasAttribute('fullscreen'))
+  ) {
+    handleYtmeActive({
+      isTheater: true, youtubeId: currentUrl()
+    })
+  } else {
+    handleYtmeActive({
+      isTheater: false,
+      youtubeId: currentUrl(),
+    })
+    devLog('settings.alwaysTheaterMode', settings.getValue().alwaysTheaterMode)
+    if (settings.getValue().alwaysTheaterMode) {
+      setTheaterMode()
+    }
+  }
+}
+
+function updateLastUrl(mutation: MutationRecord) {
+  if (mutation.type === 'attributes') {
+    devLog('updateLastUrl', currentUrl());
+    handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
+  }
+}
+const debounceCheck = debounce(checkTheaterMode, 10)
+const debounceUpdateLastUrl = debounce(updateLastUrl, 10)
+
 function detectYoutube() {
-  function updateLastUrl(mutation: MutationRecord) {
-    if (mutation.type === 'attributes') {
-      handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
-    }
-  }
-  function checkTheaterMode(mutation: MutationRecord) {
-    const mutationTarget = mutation.target as HTMLElement
-    if (
-      !mutationTarget.hasAttribute('hidden') &&
-      (mutationTarget.hasAttribute('theater') ||
-        mutationTarget.hasAttribute('full-bleed-player') ||
-        mutationTarget.hasAttribute('fullscreen'))
-    ) {
-      handleYtmeActive({
-        isTheater: true, youtubeId: currentUrl()
-      })
-    } else {
-      handleYtmeActive({
-        ...ytmeActive,
-        isTheater: false,
-      })
-    }
-  }
+  devLog('ytme detectYoutube');
   function updateFocus(mutation: MutationRecord) {
     if (
       mutation.attributeName === 'focused' ||
@@ -257,7 +274,17 @@ function detectYoutube() {
     }
   }
   // check watch page
-  mutationByAttrWith('ytd-app', updateLastUrl)
+  WaitUntilAppend('body', 'ytd-app', debounceUpdateLastUrl, {
+    attributes: true,
+    subtree: true,
+    childList: true,
+  })
+  // check theater mode
+  WaitUntilAppend('ytd-app', 'ytd-watch-flexy', debounceCheck, {
+    attributes: false,
+    subtree: true,
+    childList: true,
+  })
   // check focus search box
   mutationByAttrWith('ytd-searchbox', updateFocus)
   // check focus header popup
@@ -266,21 +293,18 @@ function detectYoutube() {
     subtree: false,
     childList: true,
   })
-  // check theater mode
-  WaitUntilAppend('ytd-app', 'ytd-watch-flexy', checkTheaterMode, {
-    attributes: false,
-    subtree: true,
-    childList: true,
-  })
   history.pushState = function (...args) {
     originalPushState.apply(this, args)
+    devLog('pushState', currentUrl());
     handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
   }
   history.replaceState = function (...args) {
     originalReplaceState.apply(this, args)
+    devLog('replaceState', currentUrl());
     handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
   }
   window.addEventListener('popstate', function () {
+    devLog('popstate', currentUrl());
     handleYtmeActive({ ...ytmeActive, youtubeId: currentUrl() })
   })
 
@@ -307,11 +331,13 @@ function waitUntilCheckElements(youtubeId: string) {
     }, 300)
   }
 }
+
 async function runYtme(results: {
   video: HTMLVideoElement
   videoParentElement: HTMLElement
   videoContainer: HTMLElement
 }) {
+  devLog('runYtme');
 
   const settings = await syncSettings()
   const {
@@ -324,7 +350,6 @@ async function runYtme(results: {
     experimental: settings.stickyVideo,
   })
 
-
   // 드래그 이벤트 생성
   if (!dragAndZoomEvent) {
     dragAndZoomEvent = new DragAndZoom(
@@ -336,10 +361,7 @@ async function runYtme(results: {
 
   // 비디오 정보 확인
   getVideoInfo(video)
-  const { resizedWidth, resizedHeight } = getCurrentVideoSizeByWindow(video)
-
-  video.style.width = resizedWidth + 'px'
-  video.style.height = resizedHeight + 'px'
+  fixFitVideoSize(video)
   video.addEventListener('loadedmetadata', videoEventGetVideoType)
 
   const pageWrap = document.querySelector(settings.defaultSelector.page_manager) as HTMLElement

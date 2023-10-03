@@ -31,13 +31,15 @@ export type SettingsType = {
   useFunction: boolean;
   useShortcutOnlyPopupEnabled: boolean
   stickyVideo: boolean
+  alwaysTheaterMode: boolean
 }
 export const defaultSettings: SettingsType = {
   defaultSelector: defaultSelector,
   useShortcut: false,
   useFunction: true,
   useShortcutOnlyPopupEnabled: true,
-  stickyVideo: false
+  stickyVideo: false,
+  alwaysTheaterMode: false
 }
 export const settings = new BehaviorSubject<SettingsType>(defaultSettings)
 

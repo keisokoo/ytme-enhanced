@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YTME - Youtube Theater Mode Expander",
-  "version": "0.40.02",
+  "version": "0.40.03",
   "description": "유튜브 영화관모드 확장 - Youtube screen expander on theater mode",
   "options_page": "/options.html",
   "background": {

@@ -30,13 +30,13 @@ export function onTimeUpdate(e: Event) {
 }
 
 // window resize event
-let timeout: number | null = null
+let videoTimeout: NodeJS.Timeout | null = null
 export function videoResizeEvent() {
   if (transformValue.getValue().rotate === 0) return
   const video = document.querySelector('video')
   if (video) {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => {
+    if (videoTimeout) clearTimeout(videoTimeout)
+    videoTimeout = setTimeout(() => {
       rotateVideoParent(transformValue.getValue().rotate)
     }, 150)
   }
