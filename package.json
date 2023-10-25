@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.22.20",
-    "@babel/preset-env": "^7.22.20",
+    "@babel/preset-env": "^7.23.2",
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.22.15",
     "@emotion/babel-plugin": "^11.11.0",
@@ -44,7 +44,7 @@
     "fork-ts-checker-webpack-plugin": "^8.0.0",
     "html-webpack-plugin": "^5.5.3",
     "mini-css-extract-plugin": "^2.7.6",
-    "postcss": "^8.4.29",
+    "postcss": "^8.4.31",
     "postcss-loader": "^7.3.3",
     "prettier": "^3.0.3",
     "sass": "^1.67.0",
