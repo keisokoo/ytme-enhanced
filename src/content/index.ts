@@ -348,6 +348,7 @@ async function runYtme(results: {
   applyDynamicStyles(settings.defaultSelector, {
     disableFunctions: !settings.useFunction,
     experimental: settings.stickyVideo,
+    hideScrollbars: settings.hideScrollbars,
   })
 
   // 드래그 이벤트 생성

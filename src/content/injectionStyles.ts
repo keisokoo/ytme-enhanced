@@ -4,11 +4,16 @@ import { defaultSelector } from "../settings"
 export type InjectStyleOptions = {
   experimental?: boolean
   disableFunctions?: boolean
+  hideScrollbars?: boolean
 }
 export const getStyles = (selector = {
   ...defaultSelector
 }, options?: InjectStyleOptions) => {
   const experimentalStyles = css`
+  ${options?.hideScrollbars ? `
+  body[ytme-enabled]::-webkit-scrollbar{
+    display: none;
+  }` : ''}
   body[ytme-enabled] #primary ytd-comment-thread-renderer{
     box-sizing: border-box;
     padding: 8px;

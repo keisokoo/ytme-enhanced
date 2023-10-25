@@ -126,6 +126,28 @@ const App = ({ ...props }: AppProps) => {
           </ItemRow>
           <ItemRow>
             <label>
+              {'hide scroll bar'}
+              <Question
+                onMouseEnter={() => {
+                  set_tooltip(
+                    `This feature hides the scroll bar on theater mode.`
+                  )
+                }}
+              />
+            </label>
+            <Toggle
+              active={settings.hideScrollbars}
+              onClick={() => {
+                const newSettings = produce(settings, (draft) => {
+                  draft.hideScrollbars = !settings.hideScrollbars
+                })
+                set_settings(newSettings)
+                chrome.storage.local.set(newSettings)
+              }}
+            />
+          </ItemRow>
+          <ItemRow>
+            <label>
               {'sticky video(experimental)'}
               <Question
                 onMouseEnter={() => {

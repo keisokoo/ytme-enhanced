@@ -32,6 +32,7 @@ export type SettingsType = {
   useShortcutOnlyPopupEnabled: boolean
   stickyVideo: boolean
   alwaysTheaterMode: boolean
+  hideScrollbars: boolean
 }
 export const defaultSettings: SettingsType = {
   defaultSelector: defaultSelector,
@@ -39,7 +40,8 @@ export const defaultSettings: SettingsType = {
   useFunction: true,
   useShortcutOnlyPopupEnabled: true,
   stickyVideo: false,
-  alwaysTheaterMode: false
+  alwaysTheaterMode: false,
+  hideScrollbars: true,
 }
 export const settings = new BehaviorSubject<SettingsType>(defaultSettings)
 
